@@ -1,0 +1,5 @@
+{
+  "name": "CityWatch — Infrastructure Capacity & Utilization Monitor",
+  "description": "A real-time infrastructure capacity and utilization monitor for urban planning and emergency response.",
+  "requestFramePermissions": []
+}
