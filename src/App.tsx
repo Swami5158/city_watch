@@ -1161,8 +1161,10 @@ function CityAssistView({ zones, simHour }: { zones: Zone[], simHour: number }) 
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [apiKey, setApiKey] = React.useState("");
-  const [showKeyInput, setShowKeyInput] = React.useState(true);
+  
+  // ✨ NEW: Get API key from environment variable - users don't need to enter it!
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  const [showKeyInput, setShowKeyInput] = React.useState(false); // ✨ Default to hidden
   
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -1218,10 +1220,13 @@ TONE RULES — STRICTLY FOLLOW:
   const handleSend = async (text?: string) => {
     const trimmed = (text || input).trim();
     if (!trimmed || loading) return;
+    
+    // ✨ NEW: Check if API key exists in environment
     if (!apiKey.trim()) {
-      setError("Please enter your Gemini API key above to use CityAssist.");
+      setError("⚠️ API key not configured. Please contact the administrator.");
       return;
     }
+    
     setError(null);
     setInput("");
     const userMsg = { role: "user", content: trimmed, time: new Date() };
@@ -1265,7 +1270,9 @@ TONE RULES — STRICTLY FOLLOW:
             <span style={{ fontSize: "24px" }}>🤖</span>
             <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "bold" }}>CityAssist</h2>
           </div>
-          <div style={{ fontSize: "12px", color: COLORS.dim, marginTop: "4px" }}>Powered by Gemini 2.0 Flash · Citizen AI Helpdesk</div>
+          <div style={{ fontSize: "12px", color: COLORS.dim, marginTop: "4px" }}>
+            {apiKey ? "✅ Ready to assist" : "⚠️ No API key configured"}
+          </div>
         </div>
         {criticalZonesCount > 0 && (
           <div style={{ backgroundColor: `${COLORS.critical}22`, color: COLORS.critical, padding: "8px 16px", borderRadius: "8px", fontSize: "12px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1389,7 +1396,8 @@ TONE RULES — STRICTLY FOLLOW:
                   type="password" 
                   placeholder="Enter Gemini API Key..." 
                   value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
+                  onChange={() => {}} // Read-only since it comes from env
+                  disabled
                   style={{ 
                     flex: 1, 
                     backgroundColor: COLORS.sidebar, 
@@ -1397,10 +1405,10 @@ TONE RULES — STRICTLY FOLLOW:
                     borderRadius: "6px", 
                     padding: "8px 12px", 
                     color: COLORS.text, 
-                    fontSize: "12px" 
+                    fontSize: "12px",
+                    opacity: 0.5
                   }}
                 />
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: "11px", color: COLORS.accent, textDecoration: "none" }}>Get API Key →</a>
                 <button onClick={() => setShowKeyInput(false)} style={{ background: "none", border: "none", color: COLORS.dim, cursor: "pointer", fontSize: "11px" }}>Hide</button>
               </div>
             )}
@@ -1439,7 +1447,7 @@ TONE RULES — STRICTLY FOLLOW:
               />
               <button 
                 onClick={() => handleSend()}
-                disabled={loading || !input.trim()}
+                disabled={loading || !input.trim() || !apiKey}
                 style={{ 
                   width: "44px", 
                   height: "44px", 
@@ -1451,7 +1459,7 @@ TONE RULES — STRICTLY FOLLOW:
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: loading || !input.trim() ? 0.5 : 1
+                  opacity: loading || !input.trim() || !apiKey ? 0.5 : 1
                 }}
               >
                 <TrendingUp size={20} style={{ transform: "rotate(90deg)" }} />
